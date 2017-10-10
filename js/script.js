@@ -1,8 +1,6 @@
 var renderer;
 var scene;
 var camera;
-var depthMaterial, saoMaterial, saoModulateMaterial, normalMaterial, vBlurMaterial, hBlurMaterial, copyMaterial;
-var depthRenderTarget, normalRenderTarget, saoRenderTarget, beautyRenderTarget, blurIntermediateRenderTarget;
 var composer, renderPass, saoPass, copyPass;
 var group;
 var params = {
@@ -48,10 +46,10 @@ function init() {
     dirLight.castShadow = true;
     dirLight.shadowCameraVisible = true;
 
-    var lightResolution = 2048;
+    var shadowResolution = 4096;
 
-    dirLight.shadowMapWidth = lightResolution;
-    dirLight.shadowMapHeight = lightResolution;
+    dirLight.shadowMapWidth = shadowResolution;
+    dirLight.shadowMapHeight = shadowResolution;
 
     var d = 512;
 
@@ -112,13 +110,16 @@ function init() {
 
     //Models
 
+    var model = 'il';
+
     var houseLoader = new THREE.MTLLoader();
-    houseLoader.load('models/il.mtl', function (materials) {
+    houseLoader.setPath('models/');
+    houseLoader.load(model + '.mtl', function (materials) {
         materials.preload();
         var loader = new THREE.OBJLoader();
         loader.setMaterials(materials);
         loader.setPath('models/');
-        loader.load('il.obj', function (object) {
+        loader.load(model + '.obj', function (object) {
             object.traverse(function (child) {
                 if (child instanceof THREE.Mesh) {
                     child.castShadow = true;
