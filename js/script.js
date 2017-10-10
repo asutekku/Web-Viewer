@@ -1,12 +1,36 @@
 var renderer;
 var scene;
 var camera;
+var depthMaterial, saoMaterial, saoModulateMaterial, normalMaterial, vBlurMaterial, hBlurMaterial, copyMaterial;
+var depthRenderTarget, normalRenderTarget, saoRenderTarget, beautyRenderTarget, blurIntermediateRenderTarget;
+var composer, renderPass, saoPass, copyPass;
+var group;
+var params = {
+    output: 0,
+    saoBias: 1,
+    saoIntensity: 0.05,
+    saoScale: 256,
+    saoKernelRadius: 100,
+    saoMinResolution: 0,
+    saoBlur: true,
+    saoBlurRadius: 12,
+    saoBlurStdDev: 6,
+    saoBlurDepthCutoff: 0.01
+}
+var supportsDepthTextureExtension = false;
+var isWebGL2 = false;
 
 init();
 animate();
 
 function init() {
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({
+        antialias: true
+    });
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMapSoft = true;
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMapCullFace = THREE.CullFaceFront;
     container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -121,17 +145,27 @@ function init() {
         });
     });
 
-    /// RENDERER
-
-    renderer = new THREE.WebGLRenderer();
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMapSoft = true;
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMapCullFace = THREE.CullFaceFront;
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableZoom = true;
 
+    /// COMPOSER
+
+    composer = new THREE.EffectComposer(renderer);
+    renderPass = new THREE.RenderPass(scene, camera);
+    composer.addPass(renderPass);
+    saoPass = new THREE.SAOPass(scene, camera, false, true);
+    saoPass.params = params;
+    saoPass.renderToScreen = true;
+    composer.addPass(saoPass);
+
     container.appendChild(renderer.domElement);
+
+    var gui = new dat.GUI();
+    gui.add(saoPass.params, "output", {
+        'AO': THREE.SAOPass.OUTPUT.BEAUTY,
+        'Normal': THREE.SAOPass.OUTPUT.Default,
+    })
+
     window.addEventListener('resize', onWindowResize, false);
 }
 
@@ -140,7 +174,8 @@ function onWindowResize() {
     windowHalfY = window.innerHeight / 2;
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    webglRenderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(width, height);
+    composer.setSize(width, height);
 }
 
 function animate() {
@@ -149,5 +184,6 @@ function animate() {
 }
 
 function render() {
-    renderer.render(scene, camera);
+    //renderer.render(scene, camera);
+    composer.render();
 }
