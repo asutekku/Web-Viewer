@@ -1,0 +1,20 @@
+define(["three", "scene"], function (THREE, scene) {
+    var shadowResolution = 4096;
+    var d = 512;
+    var dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(-50, 100, 80);
+    dirLight.position.multiplyScalar(30);
+    dirLight.castShadow = true;
+    dirLight.shadowCameraVisible = true;
+    dirLight.shadowMapWidth = shadowResolution;
+    dirLight.shadowMapHeight = shadowResolution;
+    dirLight.shadowCameraLeft = -d;
+    dirLight.shadowCameraRight = d;
+    dirLight.shadowCameraTop = d;
+    dirLight.shadowCameraBottom = -d;
+    dirLight.shadowCameraNear = 0;
+    dirLight.shadowCameraFar = 10000;
+    dirLight.shadowDarkness = 0;
+    scene.add(dirLight);
+    return dirLight;
+});
